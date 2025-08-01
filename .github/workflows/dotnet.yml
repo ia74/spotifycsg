@@ -1,28 +1,41 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
-name: .NET
+name: .NET Publish to Release
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches:
+      - main # Trigger on pushes to the main branch
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+  build-and-publish:
+    runs-on: ubuntu-latest # Or windows-latest, depending on your needs
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      - uses: actions/checkout@v4 # Checkout the repository code
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' # Specify your .NET SDK version
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish --configuration Release --output ./publish --no-build # Publish to a './publish' directory
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') # Only create release if triggered by a tag push
+        with:
+          files: ./publish/**/* # Include all published files in the release
+          name: Release ${{ github.ref_name }} # Name of the release (e.g., v1.0.0)
+          tag_name: ${{ github.ref_name }} # Tag associated with the release
+          body: |
+            # Release ${{ github.ref_name }}
+            Description of the release.
+          draft: false # Set to true to create a draft release
+          prerelease: false # Set to true for a pre-release
