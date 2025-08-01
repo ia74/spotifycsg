@@ -3,7 +3,7 @@ using Config.Net;
 
 namespace SpotifyCSG;
 
-public interface ISCSGSettings
+public interface ISettingsInterface
 {
     [DefaultValue(75)]
     int BuyPhaseVolume { get; }

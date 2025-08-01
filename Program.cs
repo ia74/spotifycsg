@@ -11,21 +11,29 @@ namespace SpotifyCSG
     class Program
     {
         static GameStateListener? _gsl;
-        public static SpotifyClient spotify;
-        public static ISCSGSettings settings;
+        private static readonly SpotifyController Spotify = new();
+        private static ISettingsInterface? _settingsInterface;
         
         static void Main(string[] args)
         {
-            Console.WriteLine("loading settings yo");
-            settings = new ConfigurationBuilder<ISCSGSettings>()
+            _settingsInterface = new ConfigurationBuilder<ISettingsInterface>()
                 .UseJsonFile("settings.json")
                 .Build();
-            // Generates a secure random verifier of length 120 and its challenge
-            Console.WriteLine("authenticatin spotify");
-            SCSGHTTP scsgHttp = new SCSGHTTP();
-            scsgHttp.StartHTTP();
             
-            Console.WriteLine("listening to csgo events");
+            Console.WriteLine($"Loaded settings:\n" +
+                              $"- Buy Phase Volume: {_settingsInterface.BuyPhaseVolume}\n" +
+                              $"- In-Game Phase Volume: {_settingsInterface.InGamePhaseVolume}\n" +
+                              $"- Set Volume When Dead: {_settingsInterface.SetVolumeWhenDead}\n" +
+                              $"    - Dead Volume: {_settingsInterface.DeadVolume}\n" +
+                              $"- Set Volume When Round Ends: {_settingsInterface.SetVolumeWhenRoundEnds}\n" +
+                              $"    - Round End Volume: {_settingsInterface.RoundEndVolume}\n" +
+                              $"- Set Volume When Bomb Planted: {_settingsInterface.SetVolumeWhenBombPlanted}\n" +
+                              $"    - Bomb Plant Volume: {_settingsInterface.BombPlantVolume}\n\n" +
+                              $"Restart SpotifyCSG to apply new changes to the config file.\n");
+
+            _ = Spotify.CreateSpotify();
+            
+            Console.WriteLine("Listening to CS:GO GameState events. Press Escape to exit.");
             _gsl = new GameStateListener(5758);
             if (!_gsl.GenerateGSIConfigFile("SpotifyCSG"))
             {
@@ -49,50 +57,32 @@ namespace SpotifyCSG
             } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
             
         }
-
-        public static async Task TrySetVolume(int vol)
-        {
-            try
-            {
-                await spotify.Player.SetVolume(new PlayerVolumeRequest(vol));
-            }
-            catch (APIException ignore)
-            {
-                Console.WriteLine(ignore);
-                Console.WriteLine(ignore.Message);
-            }
-            catch (Exception ignored)
-            {
-                Console.WriteLine(ignored.Message);
-            }
-        }
         
-        private static void OnNewGameState(GameState gamestate)
+        private static void OnNewGameState(GameState gameState)
         {
-            // Guaranteed to fire before CS2GameEvent events.
-            int vol = -1;
-            if (settings.SetVolumeWhenDead && gamestate.Player.State.Health == 0)
+            var vol = -1;
+            if (_settingsInterface!.SetVolumeWhenDead && gameState.Player.State.Health == 0)
             {
-                vol = settings.DeadVolume;
-            } else if (gamestate.Round.Phase is Phase.Freezetime)
+                vol = _settingsInterface.DeadVolume;
+            } else if (gameState.Round.Phase is Phase.Freezetime)
             {
-                vol = settings.BuyPhaseVolume;
-            } else if (gamestate.Round.Phase is Phase.Live)
+                vol = _settingsInterface.BuyPhaseVolume;
+            } else if (gameState.Round.Phase is Phase.Live)
             {
-                vol = settings.InGamePhaseVolume;
+                vol = _settingsInterface.InGamePhaseVolume;
             }
             
-            if (settings.SetVolumeWhenRoundEnds && gamestate.Round.Phase is Phase.Over)
+            if (_settingsInterface.SetVolumeWhenRoundEnds && gameState.Round.Phase is Phase.Over)
             {
-                vol = settings.RoundEndVolume;
+                vol = _settingsInterface.RoundEndVolume;
             }
-            if (settings.SetVolumeWhenBombPlanted && gamestate.Bomb.State is BombState.Planted)
+            if (_settingsInterface.SetVolumeWhenBombPlanted && gameState.Bomb.State is BombState.Planted)
             {
-                vol = settings.BombPlantVolume;
+                vol = _settingsInterface.BombPlantVolume;
             }
 
             if (vol == -1) return;
-            _ = TrySetVolume(vol);
+            _ = Spotify.TrySetVolume(vol);
         }
     }
 }
