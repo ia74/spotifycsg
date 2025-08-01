@@ -29,7 +29,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish --configuration Release --output ./publish --no-build --self-contained -p:PublishSingleFile=true # Publish to a './publish' directory
+        run: dotnet publish --configuration Release --output ./publish --self-contained -p:PublishSingleFile=true # Publish to a './publish' directory
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
