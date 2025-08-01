@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build-and-publish:
-    runs-on: ubuntu-latest # Or windows-latest, depending on your needs
+    runs-on: windows-latest # Or windows-latest, depending on your needs
 
     steps:
       - uses: actions/checkout@v4 # Checkout the repository code
@@ -29,13 +29,13 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish --configuration Release  --self-contained -p:PublishSingleFile=true # Publish to a './publish' directory
+        run: dotnet publish --configuration Release --output ./publish --self-contained -p:PublishSingleFile=true # Publish to a './publish' directory
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/') # Only create release if triggered by a tag push
         with:
-          files: ./bin/Release/net8.0/win-x64/publish/** # Include all published files in the release
+          files: ./publish/**/* # Include all published files in the release
           name: Release ${{ github.ref_name }} # Name of the release (e.g., v1.0.0)
           tag_name: ${{ github.ref_name }} # Tag associated with the release
           body: |
