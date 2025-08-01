@@ -6,7 +6,7 @@ This uses the Spotify Web API and the CS:GO GameState Integration.
 
 ## Features
 
-- Configuration file included (`settings.json`) to adjust the volume levels for different game states.
+- Configuration file included (`spotifycsg_settings.json`) to adjust the volume levels for different game states.
 - You can set the volume for:
   - Buy Phase
     - This is when the game is frozen and players can buy weapons and equipment.

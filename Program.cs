@@ -1,4 +1,5 @@
-﻿using Config.Net;
+﻿using System.Text.Json;
+using Config.Net;
 using CounterStrike2GSI;
 using CounterStrike2GSI.EventMessages;
 using CounterStrike2GSI.Nodes;
@@ -13,12 +14,19 @@ namespace SpotifyCSG
         static GameStateListener? _gsl;
         private static readonly SpotifyController Spotify = new();
         private static ISettingsInterface? _settingsInterface;
+        private const string SettingsFileName = "spotifycsg_settings.json";
         
         static void Main(string[] args)
         {
             _settingsInterface = new ConfigurationBuilder<ISettingsInterface>()
-                .UseJsonFile("settings.json")
+                .UseJsonFile(SettingsFileName)
                 .Build();
+            
+            if (!File.Exists(SettingsFileName))
+            {
+                Console.WriteLine("No settings file found. Creating a new one with default values.");
+                File.WriteAllTextAsync(SettingsFileName, JsonSerializer.Serialize(_settingsInterface));
+            }
             
             Console.WriteLine($"Loaded settings:\n" +
                               $"- Buy Phase Volume: {_settingsInterface.BuyPhaseVolume}\n" +
