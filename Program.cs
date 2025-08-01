@@ -24,7 +24,7 @@ namespace SpotifyCSG
             
             if (!File.Exists(SettingsFileName))
             {
-                Console.WriteLine("No settings file found. Creating a new one with default values.");
+                Console.WriteLine($"No settings file found. Creating {SettingsFileName} with default values.");
                 File.WriteAllTextAsync(SettingsFileName, JsonSerializer.Serialize(_settingsInterface));
             }
             
