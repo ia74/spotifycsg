@@ -35,7 +35,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/') # Only create release if triggered by a tag push
         with:
-          files: ./publish/**/*.exe # Include all published files in the release
+          files: ./publish/**/* # Include all published files in the release
           name: Release ${{ github.ref_name }} # Name of the release (e.g., v1.0.0)
           tag_name: ${{ github.ref_name }} # Tag associated with the release
           body: |
